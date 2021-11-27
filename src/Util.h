@@ -1,16 +1,16 @@
 #include <stdio.h>
 
 namespace util {
-	
-	typedef void *(__cdecl *CreateInterfaceFn)(const char *name, int *found);
+
+	typedef void* (__cdecl* CreateInterfaceFn)(const char* name, int* found);
 
 	template<class t>
-	t GetInterface(const char *module, const char *name)
+	t GetInterface(const char* module, const char* name)
 	{
 		HMODULE hmodule = GetModuleHandleA(module);
 		CreateInterfaceFn create = (CreateInterfaceFn)GetProcAddress(hmodule, "CreateInterface");
 
-		void *ret = 0;
+		void* ret = 0;
 
 		char temp_name[256]; // up this if it causes problems
 		for (unsigned short i = 0; i < 1000; i++)
@@ -25,14 +25,14 @@ namespace util {
 
 
 	template<class t>
-	t GetInterfaceSingle(const char *module, const char *name)
+	t GetInterfaceSingle(const char* module, const char* name)
 	{
 		auto fn = CreateInterfaceFn(GetProcAddress(GetModuleHandleA(module), "CreateInterface"));
 		return fn(name, 0);
 	}
 
-	inline char *getvfunc(void *obj, unsigned short which)
+	inline char* getvfunc(void* obj, unsigned short which)
 	{
-		return (*(char ***)obj)[which];
+		return (*(char***)obj)[which];
 	}
 }

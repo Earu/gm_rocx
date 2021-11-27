@@ -3,7 +3,7 @@
 
 #define ushort_max (unsigned short(-1))
 
-typedef char *vtindex; // sizeof(pointer) with ability to add numbers and shit 
+typedef char* vtindex; // sizeof(pointer) with ability to add numbers and shit 
 #ifndef offset
 #define offset(x,y) ((char *)(x) - (char *)(y))
 #endif
@@ -11,10 +11,10 @@ typedef char *vtindex; // sizeof(pointer) with ability to add numbers and shit
 class VTable
 {
 public:
-	VTable(void *object)
+	VTable(void* object)
 	{
-		original_vt = *(vtindex **)object;
-		vtindex *last_index = original_vt;
+		original_vt = *(vtindex**)object;
+		vtindex* last_index = original_vt;
 		while (*last_index++);
 
 		unsigned int size = offset(last_index, original_vt) / sizeof(*last_index);
@@ -23,9 +23,9 @@ public:
 		while (--last_index >= original_vt)
 			new_vt[offset(last_index, original_vt) / sizeof(*last_index)] = *last_index;
 
-		*(vtindex **)object = new_vt;
+		*(vtindex**)object = new_vt;
 
-		hooked = (void **)object;
+		hooked = (void**)object;
 	}
 	~VTable()
 	{
@@ -33,7 +33,7 @@ public:
 		delete[] new_vt;
 	}
 
-	void hook(unsigned short index, void *func)
+	void hook(unsigned short index, void* func)
 	{
 		get(index) = (vtindex)func;
 	}
@@ -43,16 +43,16 @@ public:
 	}
 
 
-	vtindex &getold(unsigned short index)		{ return original_vt[index]; }
+	vtindex& getold(unsigned short index) { return original_vt[index]; }
 
 private:
-	vtindex &get	(unsigned short index)		{ return new_vt[index];		 }
+	vtindex& get(unsigned short index) { return new_vt[index]; }
 
 
 public:
-	vtindex *original_vt;
-	vtindex *new_vt;
-	void **hooked;
+	vtindex* original_vt;
+	vtindex* new_vt;
+	void** hooked;
 
 };
 

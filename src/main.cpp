@@ -1,6 +1,6 @@
 #include "GarrysMod/Lua/Interface.h"
-#include "vtable.h"
-#include "util.h"
+#include "VTable.h"
+#include "Util.h"
 #include "windows.h"
 
 #define CREATELUAINTERFACE 4
@@ -88,9 +88,9 @@ public:
 int RunOnClient(lua_State* state)
 {
 	if (!clientState)
-		LUA->ThrowError("Not in game");
+		MENU->ThrowError("Not in game");
 
-	reinterpret_cast<CLuaInterface *>(clientState)->RunStringEx(LUA->CheckString(-3), LUA->CheckString(-2), LUA->CheckString());
+	reinterpret_cast<CLuaInterface *>(clientState)->RunStringEx(MENU->CheckString(-3), MENU->CheckString(-2), MENU->CheckString());
 
 	return 0;
 }
@@ -100,7 +100,6 @@ GMOD_MODULE_OPEN()
 	MENU = LUA;
 
 	auto luaShared = util::GetInterfaceSingle<void *>("lua_shared.dll", "LUASHARED003");
-	
 	if (!luaShared)
 		MessageBoxA(NULL, "gay", "gay", NULL);
 

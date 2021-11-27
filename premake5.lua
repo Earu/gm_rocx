@@ -1,37 +1,21 @@
-solution "gm_roc2"
-	language "C++"
-	location "./proj"
+newoption({
+	trigger = "gmcommon",
+	description = "Sets the path to the garrysmod_common (https://github.com/danielga/garrysmod_common) directory",
+	value = "path to garrysmod_common directory"
+})
 
-	architecture "x86"
+local gmcommon = assert(_OPTIONS.gmcommon or os.getenv("GARRYSMOD_COMMON"),
+	"you didn't provide a path to your garrysmod_common (https://github.com/danielga/garrysmod_common) directory")
+include(path.join(gmcommon, "generator.v3.lua"))
 
-	configurations "Release"
-
-	configuration "Release"
-		defines {"NDEBUG"}
-		optimize "On"
-
-	project "gmsv_roc2_win32"
-		flags "StaticRuntime"
-		kind "SharedLib"
-
-		targetdir "C:/Program Files (x86)/Steam/steamapps/common/GarrysMod/garrysmod/lua/bin"
-
-		buildoptions {"/Os", "/MP", "/arch:SSE2"}
-
-		includedirs {
-			"include",
-			"src"
-		}
-
-		files {
-			"src/**.cpp",
-			"src/**.hpp",
-			"src/**.h",
-		}
-
-		defines {
-			"GMMODULE",
-			"WIN32",
-			"_WINDOWS",
-			"_USRDLL"
-		}
+CreateWorkspace({name = "roc"})
+	CreateProject({serverside = true})
+		IncludeLuaShared()
+		IncludeSDKCommon()
+		includedirs({"include", "src"})
+		files({
+			"include/*.cpp",
+			"include/*.h",
+			"src/*.cpp",
+			"src/*.h"
+		})
