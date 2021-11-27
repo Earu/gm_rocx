@@ -18,22 +18,22 @@ Lua::ILuaBase *MENU;
 void *clientState;
 
 typedef void *(__thiscall *hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
-void * __fastcall hRunStringEx(void *_this, const char* filename, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
+void * __fastcall hRunStringEx(void *_this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
 {
-	/*MENU->PushSpecial(Lua::SPECIAL_GLOB);
+	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
 		MENU->GetField(-1, "Call");
 			MENU->PushString("RunOnClient");
 			MENU->PushNil();
-			MENU->PushString(filename);
-			MENU->PushString(stringToRun);
+			MENU->PushString(fileName);
+			MENU->PushString(str);
 		MENU->Call(4, 1);
 
 		if (!MENU->IsType(-1, Lua::Type::NIL))
-			stringToRun = MENU->CheckString();
-	MENU->Pop(3);*/
+			str = MENU->CheckString();
+	MENU->Pop(3);
 
-	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, filename, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
+	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
 }
 
 typedef void* (__fastcall* CreateLuaInterfaceFn)(void*, uchar, bool);
@@ -41,13 +41,13 @@ void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 {
 	void *state = CreateLuaInterfaceFn(sharedHooker->getold(CREATELUAINTERFACE))(_this, stateType, renew);
 
-	/*MENU->PushSpecial(Lua::SPECIAL_GLOB);
+	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
 		MENU->GetField(-1, "Call");
 			MENU->PushString("ClientStateCreated");
 			MENU->PushNil();
 		MENU->Call(2, 0);
-	MENU->Pop(2);*/
+	MENU->Pop(2);
 
 	if (stateType != 0)
 		return state;
@@ -79,9 +79,9 @@ private:
 	}
 
 public:
-	void RunStringEx(const char* filename, const char* path, const char* str, bool bRun = true, bool bPrintErrors = true, bool bDontPushErrors = true, bool bNoReturns = true)
+	void RunStringEx(const char* fileName, const char* path, const char* str, bool bRun = true, bool bPrintErrors = true, bool bDontPushErrors = true, bool bNoReturns = true)
 	{
-		return get<void(__thiscall *)(void*, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, filename, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns); //free cookies for people that know how to detect stuff
+		return get<void(__thiscall *)(void*, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns); //free cookies for people that know how to detect stuff
 	}
 
 };
@@ -91,11 +91,10 @@ LUA_FUNCTION(RunOnClient) {
 		LUA->ThrowError("Not in game");
 
 	try {
-		const char* filename = LUA->CheckString(-3);
+		const char* str = LUA->CheckString(-3);
 		const char* path = LUA->CheckString(-2);
-		const char* str = LUA->CheckString(-1);
-
-		reinterpret_cast<CLuaInterface*>(clientState)->RunStringEx(filename, path, str);
+		const char* fileName = LUA->CheckString(-1);
+		reinterpret_cast<CLuaInterface*>(clientState)->RunStringEx(fileName, path, str);
 	}
 	catch (const char* err) {
 		LUA->ThrowError(err);
