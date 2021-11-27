@@ -1,4 +1,5 @@
 #include "GarrysMod/Lua/Interface.h"
+#include "GarrysMod/Lua/Types.h"
 #include "VTable.h"
 #include "Util.h"
 #include "windows.h"
@@ -21,17 +22,19 @@ typedef void *(__thiscall *hRunStringExFn)(void*, char const*, char const*, char
 void * __fastcall hRunStringEx(void *_this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
 {
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
-	MENU->GetField(-1, "hook");
-		MENU->GetField(-1, "Call");
-			MENU->PushString("RunOnClient");
-			MENU->PushNil();
-			MENU->PushString(fileName);
-			MENU->PushString(str);
-		MENU->Call(4, 1);
-
-		if (!MENU->IsType(-1, Lua::Type::NIL))
-			str = MENU->CheckString();
-	MENU->Pop(3);
+		MENU->GetField(-1, "hook");
+			MENU->GetField(-1, "Run");
+				MENU->PushString("RunOnClient");
+				MENU->PushString(fileName);
+				MENU->PushString(str);
+			MENU->Call(3, 1);
+	
+	if (!MENU->IsType(-1, Lua::Type::NIL)) {
+		str = MENU->CheckString();
+		MENU->Pop(1);
+	}
+	
+	MENU->Pop(2);
 
 	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
 }
@@ -43,10 +46,9 @@ void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
-		MENU->GetField(-1, "Call");
+		MENU->GetField(-1, "Run");
 			MENU->PushString("ClientStateCreated");
-			MENU->PushNil();
-		MENU->Call(2, 0);
+		MENU->Call(1, 0);
 	MENU->Pop(2);
 
 	if (stateType != 0)
@@ -79,9 +81,9 @@ private:
 	}
 
 public:
-	void RunStringEx(const char* fileName, const char* path, const char* str, bool bRun = true, bool bPrintErrors = true, bool bDontPushErrors = true, bool bNoReturns = true)
+	void RunStringEx(const char* fileName, const char* path, const char* str, bool run = true, bool showErrors = true, bool pushErrors = true, bool noReturns = true)
 	{
-		return get<void(__thiscall *)(void*, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns); //free cookies for people that know how to detect stuff
+		return get<void(__thiscall*)(void*, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns); //free cookies for people that know how to detect stuff
 	}
 
 };
@@ -91,9 +93,10 @@ LUA_FUNCTION(RunOnClient) {
 		LUA->ThrowError("Not in game");
 
 	try {
-		const char* str = LUA->CheckString(-3);
-		const char* path = LUA->CheckString(-2);
-		const char* fileName = LUA->CheckString(-1);
+		// cursed but ITS GONNA WORK
+		const char* fileName = LUA->Top() > 2 && LUA->GetType(-3) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-3) : "";
+		const char* path = LUA->Top() > 1 && LUA->GetType(-2) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-2) : "";
+		const char* str = LUA->Top() > 0 && LUA->GetType(-1) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-1) : "";
 		reinterpret_cast<CLuaInterface*>(clientState)->RunStringEx(fileName, path, str);
 	}
 	catch (const char* err) {
@@ -109,7 +112,7 @@ GMOD_MODULE_OPEN()
 
 	auto luaShared = util::GetInterfaceSingle<void *>("lua_shared.dll", "LUASHARED003");
 	if (!luaShared)
-		MessageBoxA(NULL, "gay", "gay", NULL);
+		MessageBoxA(NULL, "Can't lua shared interface", "roc", NULL);
 
 	sharedHooker = new VTable(luaShared);
 
