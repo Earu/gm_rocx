@@ -11,7 +11,6 @@ include(path.join(gmcommon, "generator.v3.lua"))
 CreateWorkspace({name = "roc"})
 	CreateProject({serverside = true})
 		IncludeLuaShared()
-		IncludeSDKCommon()
 		includedirs({"include", "src"})
 		files({
 			"include/*.cpp",
