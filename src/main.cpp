@@ -112,7 +112,7 @@ GMOD_MODULE_OPEN()
 
 	auto luaShared = util::GetInterfaceSingle<void *>("lua_shared.dll", "LUASHARED003");
 	if (!luaShared)
-		MessageBoxA(NULL, "Can't lua shared interface", "roc", NULL);
+		MessageBoxA(NULL, "Can't get lua shared interface", "roc", NULL);
 
 	sharedHooker = new VTable(luaShared);
 
