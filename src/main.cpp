@@ -29,29 +29,27 @@ void * __fastcall hRunStringEx(void *_this, const char* fileName, const char* pa
 	MENU->PushString(str);
 	MENU->Call(3, 1);
 
-	if (!MENU->IsType(-1, Lua::Type::NIL)) {
-		int type = MENU->GetType(-1);
-		switch (type) {
-			case (int)GarrysMod::Lua::Type::String:
-			{
-				str = MENU->GetString(-1);
-				MENU->Pop(1);
-			}
-				break;
-			case (int)GarrysMod::Lua::Type::Bool:
-			{
-				bool ret = MENU->GetBool(-1);
-				MENU->Pop(1);
-
-				if (ret == false) {
-					MENU->Pop(2);
-					return hRunStringExFn();
-				}
-			}
-				break;
-			default:
-				MENU->Pop(1);
+	int type = MENU->GetType(-1);
+	switch (type) {
+		case (int)GarrysMod::Lua::Type::String:
+		{
+			str = MENU->GetString(-1);
+			MENU->Pop(1);
 		}
+			break;
+		case (int)GarrysMod::Lua::Type::Bool:
+		{
+			bool ret = MENU->GetBool(-1);
+			MENU->Pop(1);
+
+			if (ret == false) {
+				MENU->Pop(2);
+				return hRunStringExFn();
+			}
+		}
+			break;
+		default:
+			MENU->Pop(1);
 	}
 
 	MENU->Pop(2);
@@ -66,9 +64,10 @@ void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
-		MENU->GetField(-1, "Run");
+		MENU->GetField(-1, "Call");
+			MENU->PushNil();
 			MENU->PushString("ClientStateCreated");
-		MENU->Call(1, 0);
+		MENU->Call(2, 0);
 	MENU->Pop(2);
 
 	if (stateType != 0)
