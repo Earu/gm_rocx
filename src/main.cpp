@@ -64,10 +64,9 @@ void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
-		MENU->GetField(-1, "Call");
-			MENU->PushNil();
+		MENU->GetField(-1, "Run");
 			MENU->PushString("ClientStateCreated");
-		MENU->Call(2, 0);
+		MENU->Call(1, 0);
 	MENU->Pop(2);
 
 	if (stateType != 0)
