@@ -4,9 +4,9 @@
 #include "Util.h"
 #include "windows.h"
 
-#define CREATELUAINTERFACE 4
-#define CLOSELUAINTERFACE 5
-#define RUNSTRINGEX 111
+constexpr int CREATELUAINTERFACE = 4;
+constexpr int CLOSELUAINTERFACE = 5;
+constexpr int RUNSTRINGEX = 111;
 
 typedef unsigned char uchar;
 
@@ -22,18 +22,38 @@ typedef void *(__thiscall *hRunStringExFn)(void*, char const*, char const*, char
 void * __fastcall hRunStringEx(void *_this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
 {
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
-		MENU->GetField(-1, "hook");
-			MENU->GetField(-1, "Run");
-				MENU->PushString("RunOnClient");
-				MENU->PushString(fileName);
-				MENU->PushString(str);
-			MENU->Call(3, 1);
-	
+	MENU->GetField(-1, "hook");
+	MENU->GetField(-1, "Run");
+	MENU->PushString("RunOnClient");
+	MENU->PushString(fileName);
+	MENU->PushString(str);
+	MENU->Call(3, 1);
+
 	if (!MENU->IsType(-1, Lua::Type::NIL)) {
-		str = MENU->CheckString();
-		MENU->Pop(1);
+		int type = MENU->GetType(-1);
+		switch (type) {
+			case (int)GarrysMod::Lua::Type::String:
+			{
+				str = MENU->GetString(-1);
+				MENU->Pop(1);
+			}
+				break;
+			case (int)GarrysMod::Lua::Type::Bool:
+			{
+				bool ret = MENU->GetBool(-1);
+				MENU->Pop(1);
+
+				if (ret == false) {
+					MENU->Pop(2);
+					return hRunStringExFn();
+				}
+			}
+				break;
+			default:
+				MENU->Pop(1);
+		}
 	}
-	
+
 	MENU->Pop(2);
 
 	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
