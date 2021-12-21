@@ -15,11 +15,11 @@ VTable* clientHooker;
 
 using namespace GarrysMod;
 
-Lua::ILuaBase *MENU;
-void *clientState;
+Lua::ILuaBase* MENU;
+lua_State* clientState;
 
-typedef void *(__thiscall *hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
-void * __fastcall hRunStringEx(void *_this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
+typedef void* (__thiscall* hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
+void* __fastcall hRunStringEx(void *_this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
 {
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
@@ -44,7 +44,12 @@ void * __fastcall hRunStringEx(void *_this, const char* fileName, const char* pa
 
 			if (ret == false) {
 				MENU->Pop(2);
-				return hRunStringExFn();
+
+				/*GarrysMod::Lua::ILuaBase* CLIENT = clientState->luabase;
+				CLIENT->SetState(clientState);
+				CLIENT->ThrowError("DENIED");*/
+
+				return false;
 			}
 		}
 			break;
@@ -60,7 +65,7 @@ void * __fastcall hRunStringEx(void *_this, const char* fileName, const char* pa
 typedef void* (__fastcall* CreateLuaInterfaceFn)(void*, uchar, bool);
 void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 {
-	void *state = CreateLuaInterfaceFn(sharedHooker->getold(CREATELUAINTERFACE))(_this, stateType, renew);
+	lua_State* state = reinterpret_cast<lua_State*>(CreateLuaInterfaceFn(sharedHooker->getold(CREATELUAINTERFACE))(_this, stateType, renew));
 
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
@@ -73,7 +78,6 @@ void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 		return state;
 
 	clientState = state;
-
 	clientHooker = new VTable(clientState);
 	clientHooker->hook(RUNSTRINGEX, hRunStringEx);
 
@@ -81,7 +85,7 @@ void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 }
 
 typedef void *(__thiscall *hCloseLuaInterfaceFn)(void*, void*);
-void* __fastcall hCloseLuaInterface(void* _this, void* luaInterface)
+void* __fastcall hCloseLuaInterface(void* _this, lua_State* luaInterface)
 {
 	if (luaInterface == clientState)
 		clientState = NULL;
@@ -133,15 +137,14 @@ GMOD_MODULE_OPEN()
 		MessageBoxA(NULL, "Can't get lua shared interface", "roc", NULL);
 
 	sharedHooker = new VTable(luaShared);
-
 	sharedHooker->hook(CREATELUAINTERFACE, hCreateLuaInterface);
 	sharedHooker->hook(CLOSELUAINTERFACE, hCloseLuaInterface);
 	
-	LUA->PushSpecial(Lua::SPECIAL_GLOB);
-	LUA->PushString("RunOnClient");
-	LUA->PushCFunction(RunOnClient);
-	LUA->SetTable(-3);
-	LUA->Pop();
+	MENU->PushSpecial(Lua::SPECIAL_GLOB);
+	MENU->PushString("RunOnClient");
+	MENU->PushCFunction(RunOnClient);
+	MENU->SetTable(-3);
+	MENU->Pop();
 
 	return 0;
 }
