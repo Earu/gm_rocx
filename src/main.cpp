@@ -87,6 +87,13 @@ void * __fastcall hCreateLuaInterface(void *_this, uchar stateType, bool renew)
 typedef void *(__thiscall *hCloseLuaInterfaceFn)(void*, void*);
 void* __fastcall hCloseLuaInterface(void* _this, lua_State* luaInterface)
 {
+	MENU->PushSpecial(Lua::SPECIAL_GLOB);
+	MENU->GetField(-1, "hook");
+		MENU->GetField(-1, "Run");
+			MENU->PushString("ClientStateDestroyed");
+		MENU->Call(1, 0);
+	MENU->Pop(2);
+
 	if (luaInterface == clientState)
 		clientState = NULL;
 
