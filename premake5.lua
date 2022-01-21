@@ -9,12 +9,10 @@ local gmcommon = assert(_OPTIONS.gmcommon or os.getenv("GARRYSMOD_COMMON"),
 include(path.join(gmcommon, "generator.v3.lua"))
 
 CreateWorkspace({name = "roc"})
-	CreateProject({serverside = true})
+	CreateProject({serverside = true, source_path = "src"})
 		IncludeLuaShared()
-		includedirs({"include", "src"})
+		includedirs({"include"})
 		files({
 			"include/*.cpp",
 			"include/*.h",
-			"src/*.cpp",
-			"src/*.h"
 		})
