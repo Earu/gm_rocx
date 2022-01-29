@@ -66,7 +66,7 @@ bool __fastcall hRunStringEx(void* _this, void*, const char* fileName, const cha
 }
 
 #if ARCHITECTURE_IS_X86_64
-typedef void* (__fastcall* hCreateLuaInterfaceFn)(void*, uchar, bool);
+typedef void* (__thiscall* hCreateLuaInterfaceFn)(void*, uchar, bool);
 void* __fastcall hCreateLuaInterface(void* _this, uchar stateType, bool renew)
 #else
 typedef void* (__thiscall* hCreateLuaInterfaceFn)(void*, uchar, bool);
@@ -108,7 +108,7 @@ void* __fastcall hCloseLuaInterface(void* _this, void* ukwn, void* luaInterface)
 	MENU->Pop(2);
 
 	if (luaInterface == clientState)
-		clientState = NULL;
+		clientState = nullptr;
 
 	return hCloseLuaInterfaceFn(sharedHooker->getold(CLOSELUAINTERFACE))(_this, luaInterface);
 }
@@ -123,16 +123,19 @@ private:
 	}
 
 public:
-	void* RunStringEx(const char* fileName, const char* path, const char* str, bool run = true, bool showErrors = true, bool pushErrors = true, bool noReturns = true)
+	bool RunStringEx(const char* fileName, const char* path, const char* str, bool run = true, bool showErrors = true, bool pushErrors = true, bool noReturns = true)
 	{
-		return get<void*(__thiscall*)(bool, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns); //free cookies for people that know how to detect stuff
+		return get<bool(__thiscall*)(bool, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns); //free cookies for people that know how to detect stuff
 	}
 
 };
 
 LUA_FUNCTION(RunOnClient) {
-	if (!clientState)
+	if (!clientState) 
+	{
 		LUA->ThrowError("Not in game");
+		return 0;
+	}
 
 	try {
 		// cursed but ITS GONNA WORK
@@ -141,7 +144,8 @@ LUA_FUNCTION(RunOnClient) {
 		const char* str = LUA->Top() > 0 && LUA->GetType(-1) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-1) : "";
 		reinterpret_cast<CLuaInterface*>(clientState)->RunStringEx(fileName, path, str);
 	}
-	catch (const char* err) {
+	catch (const char* err) 
+	{
 		LUA->ThrowError(err);
 	}
 
