@@ -4,6 +4,6 @@ private:
 	template<typename t>
 	inline t get(unsigned short which)
 	{
-		return t((*(char ***)(this))[which]);
+		return t((*(char***)(this))[which]);
 	}
 };

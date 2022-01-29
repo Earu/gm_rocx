@@ -8,11 +8,6 @@ local gmcommon = assert(_OPTIONS.gmcommon or os.getenv("GARRYSMOD_COMMON"),
 	"you didn't provide a path to your garrysmod_common (https://github.com/danielga/garrysmod_common) directory")
 include(path.join(gmcommon, "generator.v3.lua"))
 
-CreateWorkspace({name = "roc"})
+CreateWorkspace({name = "rocx"})
 	CreateProject({serverside = true, source_path = "src"})
 		IncludeLuaShared()
-		includedirs({"include"})
-		files({
-			"include/*.cpp",
-			"include/*.h",
-		})

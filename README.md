@@ -1,13 +1,18 @@
-gm_roc
-======
+# gm_rocx
 
-This version of gm_roc aims to support the x64 version of gmod.
+**This is a fork of the gm_roc project that is cross platform and compiles on both x86 and x64.**
 
-Brings the cool little function RunOnClient back into the menu state!
+## Examples
 
-You should install [menu plugins](https://github.com/glua/gmod-menu-plugins) to get this to load properly (you can probs do it yourself though)
+```lua
+require("rocx")
 
-Then copy the lua folder to your gmod/gmod directory.
+concommand.Add("lua_run_client", function(_, _, _, code)
+    RunOnClient("", "", code)
+end)
+
+hook.Add("RunOnClient", "rocx_override_files", function(path, torun) return file.Read("overrides/" .. path, "DATA") or torun end)
+```
 
 ## Building the project for linux/macos
 1) Get [premake](https://github.com/premake/premake-core/releases/download/v5.0.0-alpha14/premake-5.0.0-alpha14-linux.tar.gz) add it to your `PATH`
