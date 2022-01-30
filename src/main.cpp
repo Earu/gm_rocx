@@ -4,16 +4,23 @@
 #include <GarrysMod/ModuleLoader.hpp>
 #include "VTable.h"
 
+#ifdef _WIN32
 #define CREATELUAINTERFACE 4
 #define CLOSELUAINTERFACE 5
 #define RUNSTRINGEX 111
+#else
+#define CREATELUAINTERFACE 5
+#define CLOSELUAINTERFACE 6
+#define RUNSTRINGEX 111
+#endif
 
 #ifndef _WIN32
 #define __cdecl
 #define __thiscall
+#define __fastcall
 #endif
 
-typedef unsigned char uchar;
+typedef unsigned char uchar; 
 
 VTable* sharedHooker;
 VTable* clientHooker;
@@ -26,12 +33,11 @@ const SourceSDK::ModuleLoader lua_shared_loader("lua_shared");
 Lua::ILuaBase* MENU;
 lua_State* clientState;
 
+typedef void* (__thiscall* hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
 #if ARCHITECTURE_IS_X86_64
-typedef bool (__thiscall* hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
-bool hRunStringEx(void* _this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
+void* __fastcall hRunStringEx(void* _this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
 #else
-typedef bool (__thiscall* hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
-bool __fastcall hRunStringEx(void* _this, void*, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
+void* __fastcall hRunStringEx(void* _this, void* unknown, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
 #endif
 {
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
@@ -57,7 +63,7 @@ bool __fastcall hRunStringEx(void* _this, void*, const char* fileName, const cha
 
 			if (ret == false) {
 				MENU->Pop(2);
-				return false;
+				return 0;
 			}
 		}
 			break;
@@ -67,18 +73,25 @@ bool __fastcall hRunStringEx(void* _this, void*, const char* fileName, const cha
 
 	MENU->Pop(2);
 
+#if ARCHITECTURE_IS_X86_64
 	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
+#else
+	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, unknown, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
+#endif
 }
 
-#if ARCHITECTURE_IS_X86_64
 typedef void* (__thiscall* hCreateLuaInterfaceFn)(void*, uchar, bool);
+#if ARCHITECTURE_IS_X86_64
 void* hCreateLuaInterface(void* _this, uchar stateType, bool renew)
 #else
-typedef void* (__thiscall* hCreateLuaInterfaceFn)(void*, uchar, bool);
-void* __fastcall hCreateLuaInterface(void* _this, void*, uchar stateType, bool renew)
+void* __fastcall hCreateLuaInterface(void* _this, void* unknown, uchar stateType, bool renew)
 #endif
 {
+#if ARCHITECTURE_IS_X86_64
 	lua_State* state = reinterpret_cast<lua_State*>(hCreateLuaInterfaceFn(sharedHooker->getold(CREATELUAINTERFACE))(_this, stateType, renew));
+#else
+	lua_State* state = reinterpret_cast<lua_State*>(hCreateLuaInterfaceFn(sharedHooker->getold(CREATELUAINTERFACE))(_this, unknown, stateType, renew));
+#endif
 
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
@@ -97,12 +110,11 @@ void* __fastcall hCreateLuaInterface(void* _this, void*, uchar stateType, bool r
 	return clientState;
 }
 
-#if ARCHITECTURE_IS_X86_64
 typedef void* (__thiscall* hCloseLuaInterfaceFn)(void*, void*);
+#if ARCHITECTURE_IS_X86_64
 void* hCloseLuaInterface(void* _this, lua_State* luaInterface)
 #else
-typedef void* (__thiscall* hCloseLuaInterfaceFn)(void*, void*);
-void* __fastcall hCloseLuaInterface(void* _this, void* ukwn, void* luaInterface)
+void* __fastcall hCloseLuaInterface(void* _this, void* unknown, void* luaInterface)
 #endif
 {
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
@@ -128,9 +140,9 @@ private:
 	}
 
 public:
-	bool RunStringEx(const char* fileName, const char* path, const char* str, bool run = true, bool showErrors = true, bool pushErrors = true, bool noReturns = true)
+	void* RunStringEx(const char* fileName, const char* path, const char* str, bool run = true, bool showErrors = true, bool pushErrors = true, bool noReturns = true)
 	{
-		return get<bool(__thiscall*)(bool, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns); //free cookies for people that know how to detect stuff
+		return get<void*(__thiscall*)(bool, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns); //free cookies for people that know how to detect stuff
 	}
 };
 
