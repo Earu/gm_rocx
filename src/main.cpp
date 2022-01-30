@@ -155,9 +155,9 @@ LUA_FUNCTION(RunOnClient) {
 
 	try {
 		// cursed but ITS GONNA WORK
-		const char* fileName = LUA->Top() > 2 && LUA->GetType(-3) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-3) : "";
+		const char* fileName = LUA->Top() > 2 && LUA->GetType(-3) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-1) : "";
 		const char* path = LUA->Top() > 1 && LUA->GetType(-2) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-2) : "";
-		const char* str = LUA->Top() > 0 && LUA->GetType(-1) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-1) : "";
+		const char* str = LUA->Top() > 0 && LUA->GetType(-1) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-3) : "";
 		reinterpret_cast<CLuaInterface*>(clientState)->RunStringEx(fileName, path, str);
 	}
 	catch (const char* err) 
