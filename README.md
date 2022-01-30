@@ -8,10 +8,12 @@
 require("rocx")
 
 concommand.Add("lua_run_client", function(_, _, _, code)
-    RunOnClient("", "", code)
+    RunOnClient(code)
 end)
 
-hook.Add("RunOnClient", "rocx_override_files", function(path, torun) return file.Read("overrides/" .. path, "DATA") or torun end)
+hook.Add("RunOnClient", "rocx_override_files", function(path, to_run) 
+    return file.Read("overrides/" .. path, "DATA") or to_run 
+end)
 ```
 
 ## Building the project for linux/macos
