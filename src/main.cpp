@@ -1,4 +1,4 @@
-#include <GarrysMod/Lua/Interface.h>
+#include "GarrysMod/Lua/Interface.h"
 #include <GarrysMod/Lua/Types.h>
 #include <Platform.hpp>
 #include <GarrysMod/ModuleLoader.hpp>
@@ -7,6 +7,11 @@
 #define CREATELUAINTERFACE 4
 #define CLOSELUAINTERFACE 5
 #define RUNSTRINGEX 111
+
+#ifndef _WIN32
+#define __cdecl
+#define __thiscall
+#endif
 
 typedef unsigned char uchar;
 
@@ -23,7 +28,7 @@ lua_State* clientState;
 
 #if ARCHITECTURE_IS_X86_64
 typedef bool (__thiscall* hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
-bool __fastcall hRunStringEx(void* _this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
+bool hRunStringEx(void* _this, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
 #else
 typedef bool (__thiscall* hRunStringExFn)(void*, char const*, char const*, char const*, bool, bool, bool, bool);
 bool __fastcall hRunStringEx(void* _this, void*, const char* fileName, const char* path, const char* str, bool bRun, bool bPrintErrors, bool bDontPushErrors, bool bNoReturns)
@@ -67,7 +72,7 @@ bool __fastcall hRunStringEx(void* _this, void*, const char* fileName, const cha
 
 #if ARCHITECTURE_IS_X86_64
 typedef void* (__thiscall* hCreateLuaInterfaceFn)(void*, uchar, bool);
-void* __fastcall hCreateLuaInterface(void* _this, uchar stateType, bool renew)
+void* hCreateLuaInterface(void* _this, uchar stateType, bool renew)
 #else
 typedef void* (__thiscall* hCreateLuaInterfaceFn)(void*, uchar, bool);
 void* __fastcall hCreateLuaInterface(void* _this, void*, uchar stateType, bool renew)
@@ -94,7 +99,7 @@ void* __fastcall hCreateLuaInterface(void* _this, void*, uchar stateType, bool r
 
 #if ARCHITECTURE_IS_X86_64
 typedef void* (__thiscall* hCloseLuaInterfaceFn)(void*, void*);
-void* __fastcall hCloseLuaInterface(void* _this, lua_State* luaInterface)
+void* hCloseLuaInterface(void* _this, lua_State* luaInterface)
 #else
 typedef void* (__thiscall* hCloseLuaInterfaceFn)(void*, void*);
 void* __fastcall hCloseLuaInterface(void* _this, void* ukwn, void* luaInterface)
@@ -127,7 +132,6 @@ public:
 	{
 		return get<bool(__thiscall*)(bool, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns); //free cookies for people that know how to detect stuff
 	}
-
 };
 
 LUA_FUNCTION(RunOnClient) {
