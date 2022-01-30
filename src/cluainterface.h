@@ -1,9 +1,9 @@
 class CLuaInterface
 {
 private:
-	template<typename t>
-	inline t get(unsigned short which)
+	template<typename T>
+	inline T get(unsigned short which)
 	{
-		return t((*(char***)(this))[which]);
+		return T((*(char***)(this))[which]);
 	}
 };

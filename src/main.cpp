@@ -73,11 +73,7 @@ void* __fastcall hRunStringEx(void* _this, void* unknown, const char* fileName, 
 
 	MENU->Pop(2);
 
-#if ARCHITECTURE_IS_X86_64
 	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
-#else
-	return hRunStringExFn(clientHooker->getold(RUNSTRINGEX))(_this, unknown, fileName, path, str, bRun, bPrintErrors, bDontPushErrors, bNoReturns);
-#endif
 }
 
 typedef void* (__thiscall* hCreateLuaInterfaceFn)(void*, uchar, bool);
@@ -87,11 +83,7 @@ void* hCreateLuaInterface(void* _this, uchar stateType, bool renew)
 void* __fastcall hCreateLuaInterface(void* _this, void* unknown, uchar stateType, bool renew)
 #endif
 {
-#if ARCHITECTURE_IS_X86_64
 	lua_State* state = reinterpret_cast<lua_State*>(hCreateLuaInterfaceFn(sharedHooker->getold(CREATELUAINTERFACE))(_this, stateType, renew));
-#else
-	lua_State* state = reinterpret_cast<lua_State*>(hCreateLuaInterfaceFn(sharedHooker->getold(CREATELUAINTERFACE))(_this, unknown, stateType, renew));
-#endif
 
 	MENU->PushSpecial(Lua::SPECIAL_GLOB);
 	MENU->GetField(-1, "hook");
@@ -133,16 +125,16 @@ void* __fastcall hCloseLuaInterface(void* _this, void* unknown, void* luaInterfa
 class CLuaInterface
 {
 private:
-	template<typename t>
-	inline t get(unsigned short which)
+	template<typename T>
+	inline T get(unsigned short which)
 	{
-		return t((*(char ***)(this))[which]);
+		return T((*(char ***)(this))[which]);
 	}
 
 public:
-	void* RunStringEx(const char* fileName, const char* path, const char* str, bool run = true, bool showErrors = true, bool pushErrors = true, bool noReturns = true)
+	void RunStringEx(const char* fileName, const char* path, const char* str, bool run = true, bool showErrors = true, bool pushErrors = true, bool noReturns = true)
 	{
-		return get<void*(__thiscall*)(bool, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns); //free cookies for people that know how to detect stuff
+		return get<void(__thiscall*)(void*, char const*, char const*, char const*, bool, bool, bool, bool)>(RUNSTRINGEX)(this, fileName, path, str, run, showErrors, pushErrors, noReturns);
 	}
 };
 
@@ -154,11 +146,8 @@ LUA_FUNCTION(RunOnClient) {
 	}
 
 	try {
-		// cursed but ITS GONNA WORK
-		const char* fileName = LUA->Top() > 2 && LUA->GetType(-3) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-1) : "";
-		const char* path = LUA->Top() > 1 && LUA->GetType(-2) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-2) : "";
-		const char* str = LUA->Top() > 0 && LUA->GetType(-1) == (int)GarrysMod::Lua::Type::String ? LUA->GetString(-3) : "";
-		reinterpret_cast<CLuaInterface*>(clientState)->RunStringEx(fileName, path, str);
+		const char* str = LUA->CheckString(-1);
+		reinterpret_cast<CLuaInterface*>(clientState)->RunStringEx("", "", str);
 	}
 	catch (const char* err) 
 	{
